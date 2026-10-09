@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Sample Central Park Area</name>
+    <description>Agricultural and Park Boundary Sample</description>
+    <Placemark>
+      <name>Central Park Reservoir Perimeter</name>
+      <description>Reservoir enclosure</description>
+      <Polygon>
+        <extrude>1</extrude>
+        <altitudeMode>relativeToGround</altitudeMode>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              -73.9620,40.7850,0
+              -73.9570,40.7850,0
+              -73.9570,40.7810,0
+              -73.9620,40.7810,0
+              -73.9620,40.7850,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+  </Document>
+</kml>

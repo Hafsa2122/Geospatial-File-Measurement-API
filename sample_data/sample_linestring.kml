@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Sample River Route</name>
+    <description>LineString trail example</description>
+    <Placemark>
+      <name>Hudson River Segment</name>
+      <description>River walking route</description>
+      <LineString>
+        <coordinates>
+          -73.9850,40.7480,0
+          -73.9800,40.7520,0
+          -73.9750,40.7580,0
+          -73.9700,40.7620,0
+        </coordinates>
+      </LineString>
+    </Placemark>
+  </Document>
+</kml>

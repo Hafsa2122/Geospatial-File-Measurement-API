@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Landmarks</name>
+    <Placemark>
+      <name>Empire State Building</name>
+      <Point>
+        <coordinates>-73.9857,40.7484,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Times Square</name>
+      <Point>
+        <coordinates>-73.9851,40.7580,0</coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>

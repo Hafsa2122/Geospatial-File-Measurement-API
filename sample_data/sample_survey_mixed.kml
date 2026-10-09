@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Survey Area Complete</name>
+    <Placemark>
+      <name>Field Zone A</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              -73.960,40.780,0
+              -73.950,40.780,0
+              -73.950,40.770,0
+              -73.960,40.770,0
+              -73.960,40.780,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>Irrigation Pipeline</name>
+      <LineString>
+        <coordinates>
+          -73.960,40.780,0
+          -73.955,40.775,0
+          -73.950,40.770,0
+        </coordinates>
+      </LineString>
+    </Placemark>
+    <Placemark>
+      <name>Weather Sensor Station</name>
+      <Point>
+        <coordinates>-73.955,40.775,0</coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>
