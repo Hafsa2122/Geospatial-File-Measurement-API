@@ -1,119 +1,258 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Geospatial File Measurement & Analytics</title>
+  <title>Geospatial File Measurement & Spatial Engine</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   
-  <!-- Leaflet Map CSS -->
+  <!-- Leaflet Map CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
   <style>
+    /* =========================================================
+       DYNAMIC THEME VARIABLES & PALETTES
+       ========================================================= */
+    :root[data-theme="dark"] {
+      --bg-gradient: linear-gradient(135deg, #090d16 0%, #0f172a 50%, #0a0e1a 100%);
+      --card-bg: rgba(15, 23, 42, 0.72);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-secondary: #cbd5e1;
+      --nav-bg: rgba(9, 13, 22, 0.85);
+      --dropzone-bg: rgba(255, 255, 255, 0.03);
+      --dropzone-border: rgba(56, 189, 248, 0.35);
+      --stat-bg: rgba(30, 41, 59, 0.6);
+      --item-bg: rgba(30, 41, 59, 0.45);
+      --item-hover: rgba(56, 189, 248, 0.12);
+      --map-border: rgba(255, 255, 255, 0.1);
+      --shadow-glow: 0 0 25px rgba(56, 189, 248, 0.25);
+    }
+
+    :root[data-theme="light"] {
+      --bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 40%, #e0f2fe 100%);
+      --card-bg: rgba(255, 255, 255, 0.82);
+      --card-border: rgba(148, 163, 184, 0.25);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-secondary: #334155;
+      --nav-bg: rgba(255, 255, 255, 0.9);
+      --dropzone-bg: rgba(240, 249, 255, 0.7);
+      --dropzone-border: rgba(14, 165, 233, 0.45);
+      --stat-bg: rgba(241, 245, 249, 0.8);
+      --item-bg: rgba(248, 250, 252, 0.8);
+      --item-hover: rgba(14, 165, 233, 0.15);
+      --map-border: rgba(148, 163, 184, 0.3);
+      --shadow-glow: 0 0 25px rgba(14, 165, 233, 0.18);
+    }
+
+    /* Constant Vibrant Accents */
     :root {
-      --bg-dark: #0b0f19;
-      --card-bg: rgba(18, 24, 38, 0.85);
-      --card-border: rgba(255, 255, 255, 0.08);
-      --accent-cyan: #00f2fe;
-      --accent-blue: #4facfe;
-      --accent-purple: #7f00ff;
-      --accent-green: #10b981;
-      --text-main: #f3f4f6;
-      --text-muted: #9ca3af;
-      --radius: 16px;
+      --accent-cyan: #06b6d4;
+      --accent-blue: #3b82f6;
+      --accent-purple: #8b5cf6;
+      --accent-pink: #ec4899;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --gradient-vibrant: linear-gradient(135deg, #06b6d4 0%, #3b82f6 30%, #8b5cf6 70%, #ec4899 100%);
+      --radius-lg: 20px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
     }
 
     body {
-      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: radial-gradient(circle at 10% 20%, rgba(79, 172, 254, 0.08) 0%, transparent 40%),
-                  radial-gradient(circle at 90% 80%, rgba(127, 0, 255, 0.08) 0%, transparent 40%),
-                  var(--bg-dark);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-gradient);
       color: var(--text-main);
       min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
       display: flex;
       flex-direction: column;
     }
 
+    /* =========================================================
+       MOVING BACKGROUND PARTICLES & GRADIENT ORBS ANIMATION
+       ========================================================= */
+    .animated-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.45;
+      animation: floatOrbs 18s infinite alternate ease-in-out;
+    }
+
+    .orb-1 {
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, #06b6d4, #3b82f6);
+      top: -100px;
+      left: -100px;
+      animation-duration: 22s;
+    }
+
+    .orb-2 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, #8b5cf6, #ec4899);
+      bottom: -150px;
+      right: -100px;
+      animation-duration: 26s;
+      animation-delay: -5s;
+    }
+
+    .orb-3 {
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, #10b981, #06b6d4);
+      top: 40%;
+      left: 60%;
+      animation-duration: 20s;
+      animation-delay: -10s;
+    }
+
+    @keyframes floatOrbs {
+      0% {
+        transform: translate(0px, 0px) scale(1);
+      }
+      50% {
+        transform: translate(60px, 80px) scale(1.15);
+      }
+      100% {
+        transform: translate(-50px, 120px) scale(0.9);
+      }
+    }
+
+    /* Header Styling */
     header {
-      padding: 1.25rem 2rem;
-      border-bottom: 1px solid var(--card-border);
-      backdrop-filter: blur(12px);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
       position: sticky;
       top: 0;
       z-index: 1000;
-      background: rgba(11, 15, 25, 0.8);
+      padding: 1rem 2rem;
+      background: var(--nav-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 1rem;
     }
 
-    .brand-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    .brand-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--gradient-vibrant);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.25rem;
-      box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+      font-size: 1.5rem;
+      box-shadow: 0 4px 20px rgba(6, 182, 212, 0.4);
+      animation: pulseGlow 4s infinite alternate;
     }
 
-    .brand h1 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      background: linear-gradient(to right, #ffffff, #93c5fd);
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 15px rgba(6, 182, 212, 0.4); }
+      100% { box-shadow: 0 0 25px rgba(236, 72, 153, 0.6); }
+    }
+
+    .brand-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: var(--gradient-vibrant);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    .nav-links a {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.9rem;
-      font-weight: 500;
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .theme-toggle-btn {
+      background: var(--card-bg);
       border: 1px solid var(--card-border);
-      transition: all 0.2s;
+      color: var(--text-main);
+      padding: 0.55rem 1rem;
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
 
-    .nav-links a:hover {
-      color: #fff;
+    .theme-toggle-btn:hover {
       border-color: var(--accent-cyan);
-      box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+      transform: translateY(-1px);
     }
 
+    .api-badge {
+      background: var(--gradient-vibrant);
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.55rem 1.15rem;
+      border-radius: var(--radius-md);
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .api-badge:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(236, 72, 153, 0.45);
+    }
+
+    /* Main Container */
     .container {
-      max-width: 1440px;
+      position: relative;
+      z-index: 10;
+      max-width: 1560px;
       margin: 0 auto;
       padding: 2rem;
       width: 100%;
       display: grid;
-      grid-template-columns: 450px 1fr;
+      grid-template-columns: 480px 1fr;
       gap: 2rem;
       flex: 1;
     }
 
-    @media (max-width: 1024px) {
+    @media (max-width: 1100px) {
       .container {
         grid-template-columns: 1fr;
       }
@@ -122,205 +261,206 @@
     .card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      border-radius: var(--radius);
-      backdrop-filter: blur(16px);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
       padding: 1.75rem;
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      gap: 1.4rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     }
 
     .card-title {
       font-size: 1.15rem;
-      font-weight: 600;
+      font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      justify-content: space-between;
     }
 
-    /* Upload Area */
+    /* Upload Dropzone */
     .dropzone {
-      border: 2px dashed rgba(255, 255, 255, 0.15);
-      border-radius: 12px;
-      padding: 2.5rem 1.5rem;
+      border: 2px dashed var(--dropzone-border);
+      border-radius: var(--radius-md);
+      padding: 2.2rem 1.5rem;
       text-align: center;
       cursor: pointer;
-      transition: all 0.3s ease;
-      background: rgba(255, 255, 255, 0.02);
+      background: var(--dropzone-bg);
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 0.75rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .dropzone:hover, .dropzone.dragover {
-      border-color: var(--accent-cyan);
-      background: rgba(0, 242, 254, 0.05);
-      transform: translateY(-2px);
+      border-color: var(--accent-pink);
+      background: rgba(6, 182, 212, 0.1);
+      transform: scale(1.01);
+      box-shadow: var(--shadow-glow);
     }
 
-    .drop-icon {
-      font-size: 2.5rem;
-      color: var(--accent-cyan);
-    }
-
-    .dropzone p {
-      font-size: 0.95rem;
-      color: var(--text-muted);
-    }
-
-    .dropzone span {
-      color: var(--accent-cyan);
-      font-weight: 600;
+    .drop-icon-box {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: var(--gradient-vibrant);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
     }
 
     .dropzone input {
       display: none;
     }
 
-    /* Sample quick loader */
-    .samples-box {
+    /* Sample Pills */
+    .samples-wrap {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 0.6rem;
     }
 
-    .samples-label {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .sample-buttons {
-      display: flex;
-      flex-wrap: wrap;
+    .sample-pill-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 0.5rem;
     }
 
-    .btn-sample {
-      background: rgba(255, 255, 255, 0.05);
+    .btn-pill {
+      background: var(--stat-bg);
       border: 1px solid var(--card-border);
       color: var(--text-main);
-      padding: 0.4rem 0.8rem;
-      border-radius: 8px;
-      font-size: 0.8rem;
+      padding: 0.6rem 0.8rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 600;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
       transition: all 0.2s;
     }
 
-    .btn-sample:hover {
-      background: rgba(79, 172, 254, 0.2);
-      border-color: var(--accent-blue);
+    .btn-pill:hover {
+      background: var(--item-hover);
+      border-color: var(--accent-cyan);
+      transform: translateY(-2px);
     }
 
     /* Stats Grid */
     .stats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1rem;
+      gap: 0.85rem;
     }
 
-    .stat-card {
-      background: rgba(255, 255, 255, 0.03);
+    .stat-box {
+      background: var(--stat-bg);
       border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 1rem;
+      border-radius: var(--radius-md);
+      padding: 1.1rem;
+      position: relative;
+      overflow: hidden;
     }
 
-    .stat-card .label {
-      font-size: 0.8rem;
+    .stat-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--gradient-vibrant);
+    }
+
+    .stat-label {
+      font-size: 0.78rem;
+      font-weight: 600;
       color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .stat-card .val {
-      font-size: 1.25rem;
-      font-weight: 700;
+    .stat-value {
+      font-size: 1.3rem;
+      font-weight: 800;
       color: var(--accent-cyan);
-      margin-top: 0.25rem;
       font-family: 'JetBrains Mono', monospace;
+      margin-top: 0.35rem;
     }
 
     /* Feature List */
     .feature-list {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
-      max-height: 280px;
+      gap: 0.65rem;
+      max-height: 290px;
       overflow-y: auto;
-      padding-right: 0.5rem;
+      padding-right: 0.4rem;
     }
 
     .feature-list::-webkit-scrollbar {
-      width: 6px;
+      width: 5px;
     }
     .feature-list::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 3px;
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 4px;
     }
 
-    .feature-item {
-      background: rgba(255, 255, 255, 0.03);
+    .feature-card {
+      background: var(--item-bg);
       border: 1px solid var(--card-border);
-      border-radius: 10px;
-      padding: 0.85rem;
+      border-radius: var(--radius-sm);
+      padding: 0.85rem 1rem;
       cursor: pointer;
       transition: all 0.2s;
     }
 
-    .feature-item:hover, .feature-item.active {
-      border-color: var(--accent-blue);
-      background: rgba(79, 172, 254, 0.1);
+    .feature-card:hover, .feature-card.active {
+      background: var(--item-hover);
+      border-color: var(--accent-cyan);
+      transform: translateX(3px);
     }
 
-    .feature-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.35rem;
-    }
-
-    .badge {
+    .badge-pill {
       font-size: 0.7rem;
-      padding: 0.2rem 0.5rem;
-      border-radius: 6px;
-      font-weight: 600;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 20px;
       text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
-    .badge-polygon { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-    .badge-linestring { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
-    .badge-point { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .badge-poly { background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); border: 1px solid rgba(16, 185, 129, 0.4); }
+    .badge-line { background: rgba(59, 130, 246, 0.2); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.4); }
+    .badge-point { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.4); }
 
-    .feature-measurement {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #fff;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    /* Map Layout */
-    .map-wrapper {
+    /* Right Map Container */
+    .map-container {
       display: flex;
       flex-direction: column;
+      min-height: 620px;
       height: 100%;
-      min-height: 550px;
     }
 
     #map {
       flex: 1;
-      border-radius: 12px;
+      width: 100%;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--map-border);
       z-index: 10;
-      border: 1px solid var(--card-border);
     }
 
-    /* Loading Spinner */
+    /* Spinner */
     .spinner {
       display: none;
-      width: 24px;
-      height: 24px;
-      border: 3px solid rgba(255, 255, 255, 0.1);
+      width: 22px;
+      height: 22px;
+      border: 3px solid rgba(6, 182, 212, 0.2);
       border-top-color: var(--accent-cyan);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
@@ -333,102 +473,172 @@
 </head>
 <body>
 
+  <!-- Moving Ambient Background Orbs -->
+  <div class="animated-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Header -->
   <header>
     <div class="brand">
-      <div class="brand-icon">📐</div>
+      <div class="brand-logo">📐</div>
       <div>
-        <h1>Geospatial File Measurement</h1>
+        <div class="brand-title">Geospatial Measurement Engine</div>
         <p style="font-size: 0.75rem; color: var(--text-muted);">FastAPI • GeoPandas • PyProj UTM Projections</p>
       </div>
     </div>
-    <div class="nav-links">
-      <a href="/docs" target="_blank">Interactive Swagger Docs ↗</a>
-      <a href="/redoc" target="_blank">ReDoc ↗</a>
+    <div class="header-actions">
+      <!-- Theme Switcher -->
+      <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()">
+        <span id="themeIcon">☀️</span> <span id="themeLabel">Light Mode</span>
+      </button>
+      <a href="/docs" target="_blank" class="api-badge">Interactive Swagger API ↗</a>
     </div>
   </header>
 
+  <!-- Main Container -->
   <main class="container">
-    <!-- Left Sidebar: Controls & Measurements -->
+    
+    <!-- Left Control & Measurement Sidebar -->
     <section class="card">
       <div class="card-title">
-        <span>📁</span> File Upload & Analysis
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span>📁</span> Ingestion & Analytics
+        </div>
         <div id="loader" class="spinner"></div>
       </div>
 
-      <!-- Dropzone -->
+      <!-- Drag and drop zone -->
       <div class="dropzone" id="dropzone">
-        <div class="drop-icon">📤</div>
-        <p>Drag & drop <span>Shapefile (.zip)</span> or <span>.kml</span> file</p>
-        <p style="font-size: 0.75rem; color: var(--text-muted);">Max 50MB • Automatic UTM CRS Projection</p>
+        <div class="drop-icon-box">📤</div>
+        <div style="font-weight: 700; font-size: 1rem; color: var(--text-main);">
+          Drag & drop geospatial file
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">
+          Supports <span style="color: var(--accent-cyan); font-weight: 600;">Shapefile (.zip)</span> and <span style="color: var(--accent-pink); font-weight: 600;">.kml</span>
+        </p>
         <input type="file" id="fileInput" accept=".zip,.kml" />
       </div>
 
-      <!-- Quick sample loader buttons -->
-      <div class="samples-box">
-        <div class="samples-label">Or test sample files:</div>
-        <div class="sample-buttons">
-          <button class="btn-sample" onclick="loadSample('sample_polygon.kml')">🏞️ Polygon (.kml)</button>
-          <button class="btn-sample" onclick="loadSample('sample_linestring.kml')">🛤️ LineString (.kml)</button>
-          <button class="btn-sample" onclick="loadSample('sample_shapefile.zip')">📦 Shapefile (.zip)</button>
-          <button class="btn-sample" onclick="loadSample('sample_survey_mixed.kml')">🗺️ Mixed Survey (.kml)</button>
+      <!-- 1-Click Sample Testing Buttons -->
+      <div class="samples-wrap">
+        <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">
+          ⚡ Quick 1-Click Sample Datasets:
+        </div>
+        <div class="sample-pill-grid">
+          <button class="btn-pill" onclick="loadSample('sample_polygon.kml')">🏞️ Polygon (.kml)</button>
+          <button class="btn-pill" onclick="loadSample('sample_linestring.kml')">🛤️ LineString (.kml)</button>
+          <button class="btn-pill" onclick="loadSample('sample_shapefile.zip')">📦 Shapefile (.zip)</button>
+          <button class="btn-pill" onclick="loadSample('sample_survey_mixed.kml')">🗺️ Mixed Survey (.kml)</button>
         </div>
       </div>
 
-      <!-- File Metadata & Summary -->
-      <div id="summarySection" style="display: none; flex-direction: column; gap: 1rem;">
+      <!-- Analysis Results & Breakdown -->
+      <div id="resultsSection" style="display: none; flex-direction: column; gap: 1.2rem;">
+        
+        <!-- Stats Summary Grid -->
         <div class="stats-grid">
-          <div class="stat-card">
-            <div class="label">Total Area</div>
-            <div class="val" id="statArea">0.00 m²</div>
+          <div class="stat-box">
+            <div class="stat-label">Total Metric Area</div>
+            <div class="stat-value" id="statArea">0.00 m²</div>
           </div>
-          <div class="stat-card">
-            <div class="label">Total Length</div>
-            <div class="val" id="statLength">0.00 m</div>
+          <div class="stat-box">
+            <div class="stat-label">Total Metric Length</div>
+            <div class="stat-value" id="statLength" style="color: var(--accent-pink);">0.00 m</div>
           </div>
-          <div class="stat-card">
-            <div class="label">Features</div>
-            <div class="val" id="statCount">0</div>
+          <div class="stat-box">
+            <div class="stat-label">Features Extracted</div>
+            <div class="stat-value" id="statCount" style="color: var(--accent-emerald);">0</div>
           </div>
-          <div class="stat-card">
-            <div class="label">Detected CRS</div>
-            <div class="val" id="statCRS" style="font-size: 0.9rem;">EPSG:4326</div>
+          <div class="stat-box">
+            <div class="stat-label">Source & UTM Zone</div>
+            <div class="stat-value" id="statCRS" style="font-size: 0.95rem; color: var(--accent-purple);">EPSG:4326</div>
           </div>
         </div>
 
-        <div class="card-title" style="font-size: 1rem; margin-top: 0.5rem;">
-          <span>📋</span> Feature Breakdown
+        <!-- Feature List Header -->
+        <div class="card-title" style="font-size: 1rem;">
+          <span>📋 Feature Measurements Breakdown</span>
         </div>
         <div class="feature-list" id="featureList"></div>
       </div>
     </section>
 
-    <!-- Right Side: Interactive Geospatial Map -->
-    <section class="card map-wrapper">
-      <div class="card-title" style="justify-content: space-between;">
+    <!-- Right Live Interactive Geospatial Map -->
+    <section class="card map-container">
+      <div class="card-title">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <span>🗺️</span> Spatial Visualization
+          <span>🗺️</span> Spatial Visualization Canvas
         </div>
-        <div id="mapInfo" style="font-size: 0.8rem; color: var(--text-muted);">
-          Ready for geospatial inspection
+        <div id="mapStatus" style="font-size: 0.8rem; font-weight: 500; color: var(--text-muted);">
+          Ready for inspection
         </div>
       </div>
       <div id="map"></div>
     </section>
+
   </main>
 
   <script>
-    // Initialize Leaflet map with Dark CartoDB basemap
-    const map = L.map('map').setView([40.782, -73.965], 14);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    // =========================================================
+    // MAP TILES CONFIGURATION (DARK & LIGHT)
+    // =========================================================
+    const darkTileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    const darkMatterUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+    const lightTileUrl = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
+    const map = L.map('map').setView([40.782, -73.965], 13);
+    let tileLayer = L.tileLayer(darkMatterUrl, {
       attribution: '&copy; OpenStreetMap &copy; CARTO',
       subdomains: 'abcd',
       maxZoom: 20
     }).addTo(map);
 
     let currentGeoJsonLayer = null;
-    let currentData = null;
 
-    // Dropzone handlers
+    // =========================================================
+    // THEME TOGGLE LOGIC
+    // =========================================================
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme') || 'dark';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('geo_theme', newTheme);
+      updateThemeControls(newTheme);
+
+      // Switch map tiles
+      map.removeLayer(tileLayer);
+      if (newTheme === 'dark') {
+        tileLayer = L.tileLayer(darkMatterUrl, { attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 20 }).addTo(map);
+      } else {
+        tileLayer = L.tileLayer(lightTileUrl, { attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 20 }).addTo(map);
+      }
+    }
+
+    function updateThemeControls(theme) {
+      const icon = document.getElementById('themeIcon');
+      const label = document.getElementById('themeLabel');
+      if (theme === 'dark') {
+        icon.innerText = '☀️';
+        label.innerText = 'Light Mode';
+      } else {
+        icon.innerText = '🌙';
+        label.innerText = 'Dark Mode';
+      }
+    }
+
+    // Initialize Theme from Local Storage
+    const savedTheme = localStorage.getItem('geo_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeControls(savedTheme);
+
+    // =========================================================
+    // FILE UPLOAD & API INTERACTION
+    // =========================================================
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
     const loader = document.getElementById('loader');
@@ -455,42 +665,40 @@
         const uploadRes = await fetch('/api/files/', { method: 'POST', body: formData });
         if (!uploadRes.ok) {
           const err = await uploadRes.json();
-          alert('Upload error: ' + (err.detail || 'Unknown error'));
+          alert('Upload Error: ' + (err.detail || 'Processing failed.'));
           return;
         }
 
         const fileInfo = await uploadRes.json();
-        await loadMeasurements(fileInfo.id);
+        await fetchMeasurements(fileInfo.id);
       } catch (err) {
-        alert('Failed to process file: ' + err.message);
+        alert('Network or Processing Error: ' + err.message);
       } finally {
         loader.style.display = 'none';
       }
     }
 
-    async function loadMeasurements(fileId) {
+    async function fetchMeasurements(fileId) {
       loader.style.display = 'block';
       try {
         const res = await fetch(`/api/files/${fileId}/measurements/`);
         const data = await res.json();
-        currentData = data;
         renderResults(data);
       } catch (err) {
-        alert('Failed to fetch measurements: ' + err.message);
+        alert('Error retrieving measurements: ' + err.message);
       } finally {
         loader.style.display = 'none';
       }
     }
 
     function renderResults(data) {
-      document.getElementById('summarySection').style.display = 'flex';
+      document.getElementById('resultsSection').style.display = 'flex';
       document.getElementById('statArea').innerText = (data.summary.total_area_sq_m || 0).toLocaleString() + ' m²';
       document.getElementById('statLength').innerText = (data.summary.total_length_m || 0).toLocaleString() + ' m';
       document.getElementById('statCount').innerText = data.feature_count;
       document.getElementById('statCRS').innerText = data.crs;
-      document.getElementById('mapInfo').innerText = `${data.filename} (${data.feature_count} features loaded)`;
+      document.getElementById('mapStatus').innerText = `Viewing: ${data.filename} (${data.feature_count} features)`;
 
-      // Render feature list
       const listEl = document.getElementById('featureList');
       listEl.innerHTML = '';
 
@@ -502,28 +710,31 @@
 
       data.features.forEach((feat, idx) => {
         const item = document.createElement('div');
-        item.className = 'feature-item';
-        
-        const badgeClass = feat.geometry_type.toLowerCase().includes('poly') ? 'badge-polygon' :
-                           feat.geometry_type.toLowerCase().includes('line') ? 'badge-linestring' : 'badge-point';
-        
-        const measDisplay = feat.measurement.formatted || feat.measurement.note || 'No measurement';
-        const nameDisplay = feat.properties.name || feat.properties.plot_id || `Feature #${feat.feature_id}`;
+        item.className = 'feature-card';
+
+        const isPoly = feat.geometry_type.toLowerCase().includes('poly');
+        const isLine = feat.geometry_type.toLowerCase().includes('line');
+        const badgeClass = isPoly ? 'badge-poly' : (isLine ? 'badge-line' : 'badge-point');
+
+        const measValue = feat.measurement.formatted || feat.measurement.note || 'No measurement';
+        const nameVal = feat.properties.name || feat.properties.plot_id || `Feature #${feat.feature_id}`;
 
         item.innerHTML = `
-          <div class="feature-header">
-            <span style="font-weight: 600; font-size: 0.9rem;">${nameDisplay}</span>
-            <span class="badge ${badgeClass}">${feat.geometry_type}</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <span style="font-weight: 700; font-size: 0.9rem; color: var(--text-main);">${nameVal}</span>
+            <span class="badge-pill ${badgeClass}">${feat.geometry_type}</span>
           </div>
-          <div class="feature-measurement">${measDisplay}</div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; font-weight: 700; color: var(--accent-cyan);">
+            ${measValue}
+          </div>
         `;
 
         item.onclick = () => {
-          document.querySelectorAll('.feature-item').forEach(el => el.classList.remove('active'));
+          document.querySelectorAll('.feature-card').forEach(c => c.classList.remove('active'));
           item.classList.add('active');
-          if (feat.geometry && currentGeoJsonLayer) {
-            const bounds = L.geoJSON(feat.geometry).getBounds();
-            map.fitBounds(bounds, { maxZoom: 17, padding: [30, 30] });
+          if (feat.geometry) {
+            const tempLayer = L.geoJSON(feat.geometry);
+            map.fitBounds(tempLayer.getBounds(), { maxZoom: 16, padding: [40, 40] });
           }
         };
 
@@ -543,20 +754,30 @@
       });
 
       if (geojsonFeatures.length > 0) {
-        const geojsonData = { type: 'FeatureCollection', features: geojsonFeatures };
-        currentGeoJsonLayer = L.geoJSON(geojsonData, {
+        currentGeoJsonLayer = L.geoJSON({ type: 'FeatureCollection', features: geojsonFeatures }, {
           style: (f) => ({
-            color: f.properties.type.includes('Poly') ? '#10b981' : '#3b82f6',
-            weight: 3,
-            opacity: 0.85,
-            fillOpacity: 0.35,
-            fillColor: '#10b981'
+            color: f.properties.type.includes('Poly') ? '#06b6d4' : '#ec4899',
+            weight: 4,
+            opacity: 0.9,
+            fillColor: f.properties.type.includes('Poly') ? '#06b6d4' : '#8b5cf6',
+            fillOpacity: 0.35
           }),
+          pointToLayer: (geoJsonPoint, latlng) => {
+            return L.circleMarker(latlng, {
+              radius: 8,
+              fillColor: '#f59e0b',
+              color: '#fff',
+              weight: 2,
+              opacity: 1,
+              fillOpacity: 0.85
+            });
+          },
           onEachFeature: (f, layer) => {
-            let popupContent = `<strong>${f.properties.name || f.properties.plot_id || 'Feature'}</strong><br/>`;
-            if (f.properties.measurement) popupContent += `<b>Measurement:</b> ${f.properties.measurement}<br/>`;
-            if (f.properties.description) popupContent += `<small>${f.properties.description}</small>`;
-            layer.bindPopup(popupContent);
+            let popup = `<div style="font-family: 'Plus Jakarta Sans', sans-serif;">
+              <h4 style="margin: 0 0 6px 0; color: #0f172a;">${f.properties.name || f.properties.plot_id || 'Feature'}</h4>
+              <p style="margin: 0; font-size: 0.85rem; color: #334155;"><b>Measurement:</b> ${f.properties.measurement}</p>
+            </div>`;
+            layer.bindPopup(popup);
           }
         }).addTo(map);
 
@@ -572,7 +793,7 @@
         const file = new File([blob], sampleName);
         uploadFile(file);
       } catch (err) {
-        alert('Could not load sample file: ' + err.message);
+        alert('Could not load sample: ' + err.message);
         loader.style.display = 'none';
       }
     }
