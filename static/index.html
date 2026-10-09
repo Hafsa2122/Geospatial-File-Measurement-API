@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Geospatial File Measurement & Analytics</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --card-bg: rgba(18, 24, 38, 0.85);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent-cyan: #00f2fe;
+      --accent-blue: #4facfe;
+      --accent-purple: #7f00ff;
+      --accent-green: #10b981;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at 10% 20%, rgba(79, 172, 254, 0.08) 0%, transparent 40%),
+                  radial-gradient(circle at 90% 80%, rgba(127, 0, 255, 0.08) 0%, transparent 40%),
+                  var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(11, 15, 25, 0.8);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+    }
+
+    .brand h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      background: linear-gradient(to right, #ffffff, #93c5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      transition: all 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: #fff;
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 2rem;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 450px 1fr;
+      gap: 2rem;
+      flex: 1;
+    }
+
+    @media (max-width: 1024px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(16px);
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Upload Area */
+    .dropzone {
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: rgba(255, 255, 255, 0.02);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--accent-cyan);
+      background: rgba(0, 242, 254, 0.05);
+      transform: translateY(-2px);
+    }
+
+    .drop-icon {
+      font-size: 2.5rem;
+      color: var(--accent-cyan);
+    }
+
+    .dropzone p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .dropzone span {
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    .dropzone input {
+      display: none;
+    }
+
+    /* Sample quick loader */
+    .samples-box {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .samples-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .sample-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .btn-sample {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-sample:hover {
+      background: rgba(79, 172, 254, 0.2);
+      border-color: var(--accent-blue);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .stat-card .label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .stat-card .val {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      margin-top: 0.25rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Feature List */
+    .feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-height: 280px;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+    }
+
+    .feature-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .feature-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+    }
+
+    .feature-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .feature-item:hover, .feature-item.active {
+      border-color: var(--accent-blue);
+      background: rgba(79, 172, 254, 0.1);
+    }
+
+    .feature-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.35rem;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-polygon { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .badge-linestring { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+    .badge-point { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+
+    .feature-measurement {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Map Layout */
+    .map-wrapper {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 550px;
+    }
+
+    #map {
+      flex: 1;
+      border-radius: 12px;
+      z-index: 10;
+      border: 1px solid var(--card-border);
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      display: none;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: var(--accent-cyan);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">📐</div>
+      <div>
+        <h1>Geospatial File Measurement</h1>
+        <p style="font-size: 0.75rem; color: var(--text-muted);">FastAPI • GeoPandas • PyProj UTM Projections</p>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="/docs" target="_blank">Interactive Swagger Docs ↗</a>
+      <a href="/redoc" target="_blank">ReDoc ↗</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Left Sidebar: Controls & Measurements -->
+    <section class="card">
+      <div class="card-title">
+        <span>📁</span> File Upload & Analysis
+        <div id="loader" class="spinner"></div>
+      </div>
+
+      <!-- Dropzone -->
+      <div class="dropzone" id="dropzone">
+        <div class="drop-icon">📤</div>
+        <p>Drag & drop <span>Shapefile (.zip)</span> or <span>.kml</span> file</p>
+        <p style="font-size: 0.75rem; color: var(--text-muted);">Max 50MB • Automatic UTM CRS Projection</p>
+        <input type="file" id="fileInput" accept=".zip,.kml" />
+      </div>
+
+      <!-- Quick sample loader buttons -->
+      <div class="samples-box">
+        <div class="samples-label">Or test sample files:</div>
+        <div class="sample-buttons">
+          <button class="btn-sample" onclick="loadSample('sample_polygon.kml')">🏞️ Polygon (.kml)</button>
+          <button class="btn-sample" onclick="loadSample('sample_linestring.kml')">🛤️ LineString (.kml)</button>
+          <button class="btn-sample" onclick="loadSample('sample_shapefile.zip')">📦 Shapefile (.zip)</button>
+          <button class="btn-sample" onclick="loadSample('sample_survey_mixed.kml')">🗺️ Mixed Survey (.kml)</button>
+        </div>
+      </div>
+
+      <!-- File Metadata & Summary -->
+      <div id="summarySection" style="display: none; flex-direction: column; gap: 1rem;">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="label">Total Area</div>
+            <div class="val" id="statArea">0.00 m²</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Total Length</div>
+            <div class="val" id="statLength">0.00 m</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Features</div>
+            <div class="val" id="statCount">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Detected CRS</div>
+            <div class="val" id="statCRS" style="font-size: 0.9rem;">EPSG:4326</div>
+          </div>
+        </div>
+
+        <div class="card-title" style="font-size: 1rem; margin-top: 0.5rem;">
+          <span>📋</span> Feature Breakdown
+        </div>
+        <div class="feature-list" id="featureList"></div>
+      </div>
+    </section>
+
+    <!-- Right Side: Interactive Geospatial Map -->
+    <section class="card map-wrapper">
+      <div class="card-title" style="justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span>🗺️</span> Spatial Visualization
+        </div>
+        <div id="mapInfo" style="font-size: 0.8rem; color: var(--text-muted);">
+          Ready for geospatial inspection
+        </div>
+      </div>
+      <div id="map"></div>
+    </section>
+  </main>
+
+  <script>
+    // Initialize Leaflet map with Dark CartoDB basemap
+    const map = L.map('map').setView([40.782, -73.965], 14);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
+      subdomains: 'abcd',
+      maxZoom: 20
+    }).addTo(map);
+
+    let currentGeoJsonLayer = null;
+    let currentData = null;
+
+    // Dropzone handlers
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const loader = document.getElementById('loader');
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) uploadFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length) uploadFile(fileInput.files[0]);
+    });
+
+    async function uploadFile(file) {
+      loader.style.display = 'block';
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const uploadRes = await fetch('/api/files/', { method: 'POST', body: formData });
+        if (!uploadRes.ok) {
+          const err = await uploadRes.json();
+          alert('Upload error: ' + (err.detail || 'Unknown error'));
+          return;
+        }
+
+        const fileInfo = await uploadRes.json();
+        await loadMeasurements(fileInfo.id);
+      } catch (err) {
+        alert('Failed to process file: ' + err.message);
+      } finally {
+        loader.style.display = 'none';
+      }
+    }
+
+    async function loadMeasurements(fileId) {
+      loader.style.display = 'block';
+      try {
+        const res = await fetch(`/api/files/${fileId}/measurements/`);
+        const data = await res.json();
+        currentData = data;
+        renderResults(data);
+      } catch (err) {
+        alert('Failed to fetch measurements: ' + err.message);
+      } finally {
+        loader.style.display = 'none';
+      }
+    }
+
+    function renderResults(data) {
+      document.getElementById('summarySection').style.display = 'flex';
+      document.getElementById('statArea').innerText = (data.summary.total_area_sq_m || 0).toLocaleString() + ' m²';
+      document.getElementById('statLength').innerText = (data.summary.total_length_m || 0).toLocaleString() + ' m';
+      document.getElementById('statCount').innerText = data.feature_count;
+      document.getElementById('statCRS').innerText = data.crs;
+      document.getElementById('mapInfo').innerText = `${data.filename} (${data.feature_count} features loaded)`;
+
+      // Render feature list
+      const listEl = document.getElementById('featureList');
+      listEl.innerHTML = '';
+
+      if (currentGeoJsonLayer) {
+        map.removeLayer(currentGeoJsonLayer);
+      }
+
+      const geojsonFeatures = [];
+
+      data.features.forEach((feat, idx) => {
+        const item = document.createElement('div');
+        item.className = 'feature-item';
+        
+        const badgeClass = feat.geometry_type.toLowerCase().includes('poly') ? 'badge-polygon' :
+                           feat.geometry_type.toLowerCase().includes('line') ? 'badge-linestring' : 'badge-point';
+        
+        const measDisplay = feat.measurement.formatted || feat.measurement.note || 'No measurement';
+        const nameDisplay = feat.properties.name || feat.properties.plot_id || `Feature #${feat.feature_id}`;
+
+        item.innerHTML = `
+          <div class="feature-header">
+            <span style="font-weight: 600; font-size: 0.9rem;">${nameDisplay}</span>
+            <span class="badge ${badgeClass}">${feat.geometry_type}</span>
+          </div>
+          <div class="feature-measurement">${measDisplay}</div>
+        `;
+
+        item.onclick = () => {
+          document.querySelectorAll('.feature-item').forEach(el => el.classList.remove('active'));
+          item.classList.add('active');
+          if (feat.geometry && currentGeoJsonLayer) {
+            const bounds = L.geoJSON(feat.geometry).getBounds();
+            map.fitBounds(bounds, { maxZoom: 17, padding: [30, 30] });
+          }
+        };
+
+        listEl.appendChild(item);
+
+        if (feat.geometry) {
+          geojsonFeatures.push({
+            type: 'Feature',
+            geometry: feat.geometry,
+            properties: {
+              ...feat.properties,
+              measurement: feat.measurement.formatted || feat.measurement.note,
+              type: feat.geometry_type
+            }
+          });
+        }
+      });
+
+      if (geojsonFeatures.length > 0) {
+        const geojsonData = { type: 'FeatureCollection', features: geojsonFeatures };
+        currentGeoJsonLayer = L.geoJSON(geojsonData, {
+          style: (f) => ({
+            color: f.properties.type.includes('Poly') ? '#10b981' : '#3b82f6',
+            weight: 3,
+            opacity: 0.85,
+            fillOpacity: 0.35,
+            fillColor: '#10b981'
+          }),
+          onEachFeature: (f, layer) => {
+            let popupContent = `<strong>${f.properties.name || f.properties.plot_id || 'Feature'}</strong><br/>`;
+            if (f.properties.measurement) popupContent += `<b>Measurement:</b> ${f.properties.measurement}<br/>`;
+            if (f.properties.description) popupContent += `<small>${f.properties.description}</small>`;
+            layer.bindPopup(popupContent);
+          }
+        }).addTo(map);
+
+        map.fitBounds(currentGeoJsonLayer.getBounds(), { padding: [50, 50] });
+      }
+    }
+
+    async function loadSample(sampleName) {
+      loader.style.display = 'block';
+      try {
+        const fileRes = await fetch(`/sample_data/${sampleName}`);
+        const blob = await fileRes.blob();
+        const file = new File([blob], sampleName);
+        uploadFile(file);
+      } catch (err) {
+        alert('Could not load sample file: ' + err.message);
+        loader.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>

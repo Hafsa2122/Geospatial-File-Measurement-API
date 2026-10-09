@@ -1,9 +1,15 @@
-from fastapi import FastAPI
+from pathlib import Path
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse
 
 from app.config import settings
 from app.routers import files_router
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+STATIC_DIR = BASE_DIR / "static"
+SAMPLE_DATA_DIR = BASE_DIR / "sample_data"
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -33,14 +39,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include Routers
+# Include API Routers
 app.include_router(files_router, prefix=settings.API_PREFIX)
 
+# Serve Sample Files for live interactive frontend testing
+if SAMPLE_DATA_DIR.exists():
+    app.mount("/sample_data", StaticFiles(directory=SAMPLE_DATA_DIR), name="sample_data")
 
-@app.get("/", tags=["Health & Status"])
-async def root():
+# Serve Static Assets if present
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+@app.get("/health", tags=["Health & Status"])
+@app.get("/api/health", tags=["Health & Status"])
+async def health_check():
     """
-    Health check and basic API information.
+    Health check and basic API information in JSON.
     """
     return {
         "service": settings.PROJECT_NAME,
@@ -55,6 +70,20 @@ async def root():
             "delete_file": "DELETE /api/files/{id}/",
         },
     }
+
+
+@app.get("/", tags=["Interactive UI & Health"])
+async def root(request: Request):
+    """
+    Serves the interactive Visual Dashboard frontend if HTML requested, or JSON health info.
+    """
+    index_file = STATIC_DIR / "index.html"
+    accept_header = request.headers.get("accept", "")
+    if "application/json" in accept_header and not "text/html" in accept_header:
+        return await health_check()
+    if index_file.exists():
+        return FileResponse(index_file)
+    return await health_check()
 
 
 if __name__ == "__main__":
