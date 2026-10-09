@@ -1,8 +1,9 @@
 import math
 from typing import Optional, Tuple
 import pyproj
+import numpy as np
+import shapely
 from shapely.geometry.base import BaseGeometry
-from shapely.ops import transform
 
 
 class CRSTransformer:
@@ -100,8 +101,16 @@ class CRSTransformer:
         target_crs_str = cls.get_optimal_utm_crs(lon, lat)
         target_obj = pyproj.CRS.from_user_input(target_crs_str)
 
-        # Create transformer (always_xy=True ensures (x, y) / (lon, lat) order)
-        project = pyproj.Transformer.from_crs(source_obj, target_obj, always_xy=True).transform
-        projected_geometry = transform(project, geometry)
+        # Vectorized coordinate transformation
+        transformer = pyproj.Transformer.from_crs(source_obj, target_obj, always_xy=True)
+        
+        def transform_coords(coords: np.ndarray) -> np.ndarray:
+            x, y = transformer.transform(coords[:, 0], coords[:, 1])
+            if coords.shape[1] >= 3:
+                return np.column_stack((x, y, coords[:, 2]))
+            return np.column_stack((x, y))
+
+        projected_geometry = shapely.transform(geometry, transform_coords)
 
         return projected_geometry, target_crs_str
+
